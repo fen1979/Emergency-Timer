@@ -9,4 +9,4 @@ Buttons INC/DEC pins 11, 12
 time to stop by default 10 min
 Maximum time 30 min
 Minimum time 1 min
-LCD address 0X30 (hex)
+LCD address 0x3E (hex)
