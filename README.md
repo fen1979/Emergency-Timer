@@ -1,6 +1,6 @@
 # Emergency-Timer
-Emergency timer for an device in NTI Lab
-Instal Liquid cristall lib files to project first!
+# Emergency timer for an device in NTI Lab
+# Instal Liquid cristall lib files to project first!
 LCD pins (AtMega 328P) A4 - SDA, A5 - SCL
 LED pin 13
 Sensor pin A1
