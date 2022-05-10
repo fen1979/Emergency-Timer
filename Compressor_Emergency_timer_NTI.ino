@@ -21,6 +21,12 @@ int timerResetDate = 10; // minutes
 int timerCount = 0;
 bool writeToLcd = false;
 byte menuPositioner = 0;
+String menu[] = {
+"1) Stop Time",
+"2) ",
+"3) ",
+"4) "
+  };
 
 LiquidCrystal_I2C lcd(0x3E, 16, 2);
 
