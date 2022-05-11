@@ -1,47 +1,34 @@
 #include <LiquidCrystal_I2C.h>
-
 #define sensorIn A1
 #define relayOut1 A2
 #define relayOut2 A3
 #define relayOut3 6
 #define relayOut4 7
-#define indication 13
-
 #define saveBtn 8
 #define decBtn 9
 #define menuBtn 10
 #define incBtn 11
+#define indication 13
 
 #define CLEAR_LCD 1
 #define NO_CLEAR_LCD 0
 
-
-// time for stop the compressor
+byte inPin[] = {A1, 8, 9, 10, 11};
+byte outPin[] = {13, A2, A3, 6, 7};
 int timerResetDate = 10; // minutes
 int timerCount = 0;
 bool writeToLcd = false;
-byte menuPositioner = 0;
-String menu[] = {
-"1) Stop Time",
-"2) ",
-"3) ",
-"4) "
-  };
 
 LiquidCrystal_I2C lcd(0x3E, 16, 2);
 
 void setup() {
-  pinMode(sensorIn, INPUT);
-  pinMode(incBtn, INPUT);
-  pinMode(decBtn, INPUT);
-  pinMode(menuBtn, INPUT);
-  pinMode(saveBtn, INPUT);
+  for (byte i = 0; i < sizeof(inPin); i++) {
+    pinMode(inPin[i], INPUT);
+  }
 
-  pinMode(relayOut1, OUTPUT);
-  pinMode(relayOut2, OUTPUT);
-  pinMode(relayOut3, OUTPUT);
-  pinMode(relayOut4, OUTPUT);
-  pinMode(indication, OUTPUT);
+  for (byte i = 0; i < sizeof(outPin); i++) {
+    pinMode(outPin[i], OUTPUT);
+  }
 
   analogWrite(relayOut1, 0);
   analogWrite(relayOut2, 0);
@@ -52,15 +39,13 @@ void setup() {
   lcd.begin();
   lcd.clear();
   lcd.setCursor(0, 0);
-  String outTxt = "Current Emergency stop time is " + String(timerResetDate) + " minute";
+  String outTxt = "Emergency stop time is " + String(timerResetDate) + " min";
   // scrollMessage(0, outTxt, 350, 16);
 }
 
-
-
 void loop() {
   // menu function
-  isMenuCalled();
+  Menu();
 
   if (SensorMesurment()) {
     StartEmergencyTimer();
@@ -87,32 +72,27 @@ bool SensorMesurment() {
 }
 
 void StartEmergencyTimer() {
-
   if (timerCount < (timerResetDate * 60)) {
     timerCount++;
-    if ((timerCount % 2) == 0) {
-      analogWrite(indication, 0);
-    } else {
-      analogWrite(indication, 1024);
-    }
+    analogWrite(indication, ((timerCount % 2) == 0) ? 1024 : 0);
 
-    uint32_t t = (timerResetDate * 60) - timerCount;
-    uint32_t s = t % 60;
+    int t = (timerResetDate * 60) - timerCount;
+    int s = t % 60;
     t = (t - s) / 60;
-    uint32_t m = t % 60;
+    int m = t % 60;
     t = (t - m) / 60;
-    uint32_t h = t;
+    int h = t;
 
     String timeToStop = String(h) + ":" + String(m) + ":" + String(s);
-    WriteStaticTextToLcd(0, "Emergency Timer", 1);
-    WriteStaticTextToLcd(1, "Stop - " + timeToStop, 0);
+    WriteStaticTextToLcd(0, "Emergency Timer", CLEAR_LCD);
+    WriteStaticTextToLcd(1, "Stop - " + timeToStop, NO_CLEAR_LCD);
 
     delay(990);
   } else {
-    analogWrite(relayOut1, 0);
-    analogWrite(relayOut2, 0);
-    analogWrite(relayOut3, 0);
-    analogWrite(relayOut4, 0);
+    analogWrite(relayOut1, 1024);
+    analogWrite(relayOut2, 1024);
+    analogWrite(relayOut3, 1024);
+    analogWrite(relayOut4, 1024);
     analogWrite(indication, 0);
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -121,58 +101,26 @@ void StartEmergencyTimer() {
 }
 
 // menu buttons and options
-void isMenuCalled() {
-
+void Menu() {
   if (digitalRead(menuBtn) == LOW) {
-    delay(250);
-    if ( menuPositioner != 4) {
-      menuPositioner++;
-    } else {
-      menuPositioner = 0;
+    // TODO Menu actions
+  }
+
+  if (digitalRead(incBtn) == LOW || digitalRead(decBtn) == LOW) {
+    // increase/decrease time to stop
+    WriteStaticTextToLcd(0, "Stop Time", CLEAR_LCD);
+    WriteStaticTextToLcd(1, String(timerResetDate) + " min", NO_CLEAR_LCD);
+
+    if (digitalRead(incBtn) == LOW && timerResetDate != 30) {
+      timerResetDate++;
     }
+    if (digitalRead(decBtn) == LOW && timerResetDate != 1) {
+      timerResetDate--;
+    }
+
+    writeToLcd = false;
+    delay(250);
   }
-
-  switch (menuPositioner) {
-    // timer inc/dec
-    case 1: {
-        if (digitalRead(incBtn) == LOW || digitalRead(decBtn) == LOW) {
-          WriteStaticTextToLcd(0, String(menuPositioner) + ") Stop Time", CLEAR_LCD);
-          WriteStaticTextToLcd(1, String(timerResetDate) + " min", NO_CLEAR_LCD);
-          if (digitalRead(incBtn) == LOW && timerResetDate != 30) {
-            timerResetDate++;
-            writeToLcd = false;
-            delay(250);
-          }
-
-          if (digitalRead(decBtn) == LOW && timerResetDate != 1) {
-            timerResetDate--;
-            writeToLcd = false;
-            delay(250);
-          }
-        }
-      } break;
-    // stop all works
-    case 2: {
-        WriteStaticTextToLcd(0, String(menuPositioner) + ") Stop Time", CLEAR_LCD);
-        WriteStaticTextToLcd(1, String(timerResetDate) + " min", NO_CLEAR_LCD);
-      } break;
-    //
-    case 3: {
-        WriteStaticTextToLcd(0, String(menuPositioner) + ") Stop Time", CLEAR_LCD);
-        WriteStaticTextToLcd(1, String(timerResetDate) + " min", NO_CLEAR_LCD);
-      } break;
-    //
-    case 4: {
-        WriteStaticTextToLcd(0, String(menuPositioner) + ") Stop Time", CLEAR_LCD);
-        WriteStaticTextToLcd(1, String(timerResetDate) + " min", NO_CLEAR_LCD);
-      } break;
-
-    default : break;
-  }
-
-
-
-
 }
 
 // screen static text
