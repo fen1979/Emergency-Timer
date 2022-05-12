@@ -24,31 +24,28 @@ bool power = false;
 LiquidCrystal_I2C lcd(0x3E, 16, 2);
 
 void setup() {
+  lcd.begin();
+    
   for (byte i = 0; i < sizeof(inPin); i++) {
     pinMode(inPin[i], INPUT_PULLUP);
   }
-
   for (byte i = 0; i < sizeof(outPin); i++) {
     pinMode(outPin[i], OUTPUT);
   }
-
   analogWrite(relayOut1, 0);
   analogWrite(relayOut2, 0);
   analogWrite(relayOut3, 0);
   analogWrite(relayOut4, 0);
   analogWrite(indication, 1024);
 
-  lcd.begin();
   lcd.clear();
   lcd.setCursor(0, 0);
-  String outTxt = "Emergency stop time is " + String(timerResetDate) + " min";
-  scrollMessage(0, outTxt, 350, 16);
+  scrollMessage(0, "Emergency stop time is " + String(timerResetDate) + " min", 350, 16);
 }
-
+// MESURMENT CASE
 bool SensorMesurment() {
   return (analogRead(sensorIn) < 50) ? true : false;
 }
-
 // EMERGENCY CASE
 void EmergencyCase() {
   if (SensorMesurment()) {
@@ -75,21 +72,18 @@ void EmergencyCase() {
     delay(350);
   }
 }
+// EMERGENCY TIMER CASE
 void StartEmergencyTimer() {
-  if (timerCount < (timerResetDate * 60)) {
-    timerCount++;
+  if (timerCount < (timerResetDate * 60)) {    
     analogWrite(indication, ((timerCount % 2) == 0) ? 1024 : 0);
-
     int t = (timerResetDate * 60) - timerCount;
     int s = t % 60;
     t = (t - s) / 60;
     int m = t % 60;
     t = (t - m) / 60;
     int h = t;
-
-    String timeToStop = String(h) + ":" + String(m) + ":" + String(s);
-    PrintTextToLCD("Emergency Timer", "Stop - " + timeToStop);
-
+    PrintTextToLCD("Emergency Timer", "Stop - " + String(h) + ":" + String(m) + ":" + String(s));
+    timerCount++;
     delay(990);
   } else {
     analogWrite(relayOut1, 1024);
@@ -136,7 +130,7 @@ void MotorSwitching() {
   analogWrite(relayOut3, motorPower[2]);
   analogWrite(relayOut4, motorPower[3]);
 }
-// screen line by line print text case
+// LINE PRINT TEXT CASE
 void PrintTextToLCD(String topRow, String bottomRow) {
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -144,7 +138,7 @@ void PrintTextToLCD(String topRow, String bottomRow) {
   lcd.setCursor(0, 1);
   lcd.print(bottomRow);
 }
-// screen scrolling message case
+// SCROLLING PRINT TEXT CASE
 void scrollMessage(int row, String message, int delayTime, int totalColumns) {
   for (int i = 0; i < totalColumns; i++) {
     message = " " + message;
@@ -158,7 +152,7 @@ void scrollMessage(int row, String message, int delayTime, int totalColumns) {
 }
 
 void loop() {
-  // menu round cicle
+  // round cicle menu
   if (digitalRead(menuBtn) == LOW) {
     if (menuNow != 3)menuNow++;
     else menuNow = 1;
