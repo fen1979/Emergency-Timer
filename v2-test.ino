@@ -4,7 +4,7 @@
 #define relayOut2 A3
 #define relayOut3 6
 #define relayOut4 7
-#define saveBtn 8
+#define emergencyStopButton 8
 #define decBtn 9
 #define menuBtn 10
 #define incBtn 11
@@ -12,10 +12,10 @@
 
 byte inPin[] = {A1, 8, 9, 10, 11};
 byte outPin[] = {13, A2, A3, 6, 7};
-int timerResetDate = 10; // minutes
+int timerResetDate = 10; // default time to stop minutes
 int timerCount = 0;
 byte menuNow = 1;
-bool writeToLcd = false;
+bool writeToLcd = true;
 // for PNP Line
 byte motorStatus = 1;
 int motorPower[4] = {0, 0, 0, 0};
@@ -25,7 +25,7 @@ LiquidCrystal_I2C lcd(0x3E, 16, 2);
 
 void setup() {
   lcd.begin();
-    
+
   for (byte i = 0; i < sizeof(inPin); i++) {
     pinMode(inPin[i], INPUT_PULLUP);
   }
@@ -36,8 +36,7 @@ void setup() {
   analogWrite(relayOut2, 0);
   analogWrite(relayOut3, 0);
   analogWrite(relayOut4, 0);
-  analogWrite(indication, 1024);
-
+  digitalWrite(indication, HIGH);
   lcd.clear();
   lcd.setCursor(0, 0);
   scrollMessage(0, "Emergency stop time is " + String(timerResetDate) + " min", 350, 16);
@@ -50,17 +49,13 @@ bool SensorMesurment() {
 void EmergencyCase() {
   if (SensorMesurment()) {
     StartEmergencyTimer();
-
-    if (writeToLcd) {
-      PrintTextToLCD("Emergency", "Timer started!!!");
-      writeToLcd = false;
-    }
+    writeToLcd = true;
   } else {
-    analogWrite(indication, 1024);
+    digitalWrite(indication, HIGH);
     timerCount = 0;
-    if (!writeToLcd) {
-      PrintTextToLCD("Normal Work.", "Stop time " + String(timerResetDate) + " min");
-      writeToLcd = true;
+    if (writeToLcd) {
+      PrintTextToLCD("NORMAL WORK", "Stop time " + String(timerResetDate) + " min");
+      writeToLcd = false;
     }
   }
   // increase/decrease time to stop actions
@@ -68,21 +63,19 @@ void EmergencyCase() {
     PrintTextToLCD("Stop Time", String(timerResetDate) + " min");
     if (digitalRead(incBtn) == LOW && timerResetDate != 30) timerResetDate++;
     if (digitalRead(decBtn) == LOW && timerResetDate != 1) timerResetDate--;
-    writeToLcd = false;
+    writeToLcd = true;
     delay(350);
   }
 }
 // EMERGENCY TIMER CASE
 void StartEmergencyTimer() {
-  if (timerCount < (timerResetDate * 60)) {    
-    analogWrite(indication, ((timerCount % 2) == 0) ? 1024 : 0);
+  if (timerCount < (timerResetDate * 60)) {
+    digitalWrite(indication, digitalRead(indication) ^ 1);
     int t = (timerResetDate * 60) - timerCount;
-    int s = t % 60;
-    t = (t - s) / 60;
-    int m = t % 60;
-    t = (t - m) / 60;
-    int h = t;
-    PrintTextToLCD("Emergency Timer", "Stop - " + String(h) + ":" + String(m) + ":" + String(s));
+    PrintTextToLCD("EMERGENCY STOP", "Stop after " +
+                   (((((t - (t % 60)) / 60) % 60) < 10) ? "0" + String(((t - (t % 60)) / 60) % 60) : String(((t - (t % 60)) / 60) % 60))
+                   + ":" +
+                   (((t % 60) < 10) ? "0" + String(t % 60) : String(t % 60)));
     timerCount++;
     delay(990);
   } else {
@@ -90,10 +83,12 @@ void StartEmergencyTimer() {
     analogWrite(relayOut2, 1024);
     analogWrite(relayOut3, 1024);
     analogWrite(relayOut4, 1024);
-    analogWrite(indication, 0);
+    digitalWrite(indication, LOW);
     lcd.clear();
     lcd.setCursor(0, 0);
-    scrollMessage(0, "For restart need power off !!!", 350, 16);
+    lcd.print("EMERGENCY STOP");
+    lcd.setCursor(0, 1);
+    scrollMessage(1, "For restart need power off !!!", 350, 16);
   }
 }
 // PNP LINE CASE
@@ -130,6 +125,32 @@ void MotorSwitching() {
   analogWrite(relayOut3, motorPower[2]);
   analogWrite(relayOut4, motorPower[3]);
 }
+// POWER OFF CASE
+void PowerOffCase() {
+  if (writeToLcd) {
+    PrintTextToLCD("MOTOR POWER OFF", "Press menu to ON");
+    writeToLcd = false;
+  }
+  analogWrite(relayOut1, 1024);
+  analogWrite(relayOut2, 1024);
+  analogWrite(relayOut3, 1024);
+  analogWrite(relayOut4, 1024);
+  digitalWrite(indication, LOW);
+}
+// EMERGENCY POWER STOP CASE
+void EmergencyPowerOffCase() {
+  analogWrite(relayOut1, 1024);
+  analogWrite(relayOut2, 1024);
+  analogWrite(relayOut3, 1024);
+  analogWrite(relayOut4, 1024);
+  digitalWrite(indication, LOW);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+
+  lcd.print("EMERGENCY STOP");
+  lcd.setCursor(0, 1);
+  scrollMessage(1, "Unpush STOP Button and reset the system!", 350, 16);
+}
 // LINE PRINT TEXT CASE
 void PrintTextToLCD(String topRow, String bottomRow) {
   lcd.clear();
@@ -152,18 +173,27 @@ void scrollMessage(int row, String message, int delayTime, int totalColumns) {
 }
 
 void loop() {
+  // Emergency Stop Button
+  if (digitalRead(emergencyStopButton) == LOW) {
+    menuNow = 4;
+    writeToLcd = true;
+  } else {
+    /* TODO: button stop like a fire btn and add menu code to else state */
+  }
+
   // round cicle menu
   if (digitalRead(menuBtn) == LOW) {
     if (menuNow != 3)menuNow++;
     else menuNow = 1;
+    writeToLcd = true;
     delay(350);
   }
 
   // work code calls
   if (menuNow == 1) EmergencyCase();
   if (menuNow == 2) MotorSwitching();
-  if (menuNow == 3) PrintTextToLCD("menu 3 top line", "bottom line");
-  // save btn actions
-  // if (digitalRead(saveBtn) == LOW){}
+  if (menuNow == 3) PowerOffCase();
+  if (menuNow == 4) EmergencyPowerOffCase();
+
   delay(10);
 }
