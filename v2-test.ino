@@ -146,10 +146,9 @@ void EmergencyPowerOffCase() {
   digitalWrite(indication, LOW);
   lcd.clear();
   lcd.setCursor(0, 0);
-
   lcd.print("EMERGENCY STOP");
   lcd.setCursor(0, 1);
-  scrollMessage(1, "Unpush STOP Button and reset the system!", 350, 16);
+  scrollMessage(1, "Unpush STOP Button and press MENU button to start!", 350, 16);
 }
 // LINE PRINT TEXT CASE
 void PrintTextToLCD(String topRow, String bottomRow) {
@@ -174,19 +173,17 @@ void scrollMessage(int row, String message, int delayTime, int totalColumns) {
 
 void loop() {
   // Emergency Stop Button
-  if (digitalRead(emergencyStopButton) == LOW) {
+  if (digitalRead(emergencyStopButton) == LOW ) {
     menuNow = 4;
     writeToLcd = true;
   } else {
-    /* TODO: button stop like a fire btn and add menu code to else state */
-  }
-
-  // round cicle menu
-  if (digitalRead(menuBtn) == LOW) {
-    if (menuNow != 3)menuNow++;
-    else menuNow = 1;
-    writeToLcd = true;
-    delay(350);
+    // round cicle menu
+    if (digitalRead(menuBtn) == LOW) {
+      if (menuNow != 3)menuNow++;
+      else menuNow = 1;
+      writeToLcd = true;
+      delay(350);
+    }
   }
 
   // work code calls
