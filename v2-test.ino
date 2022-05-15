@@ -12,7 +12,7 @@
 
 byte inPin[] = {A1, 8, 9, 10, 11};
 byte outPin[] = {13, A2, A3, 6, 7};
-int timerResetDate = 6; // default time to stop minutes
+int timerResetDate = 5; // default time to stop minutes
 int timerCount = 0;
 byte menuNow = 1;
 bool writeToLcd = true;
@@ -76,10 +76,15 @@ void StartEmergencyTimer() {
   if (timerCount < (timerResetDate * 60)) {
     digitalWrite(indication, digitalRead(indication) ^ 1);
     int t = (timerResetDate * 60) - timerCount;
-    PrintTextToLCD("EMERGENCY STOP", "Stop after " +
-                   (((((t - (t % 60)) / 60) % 60) < 10) ? "0" + String(((t - (t % 60)) / 60) % 60) : String(((t - (t % 60)) / 60) % 60))
-                   + ":" +
-                   (((t % 60) < 10) ? "0" + String(t % 60) : String(t % 60)));
+
+    if (!writeToLcd) {
+      PrintTextToLCD("EMERGENCY STOP", "Stop after ");
+      writeToLcd = true;
+    }
+    lcd.setCursor(11, 1);
+    lcd.print((((((t - (t % 60)) / 60) % 60) < 10) ? "0" + String(((t - (t % 60)) / 60) % 60) : String(((t - (t % 60)) / 60) % 60))
+              + ":" +
+              (((t % 60) < 10) ? "0" + String(t % 60) : String(t % 60)));
     timerCount++;
     delay(990);
   } else {
