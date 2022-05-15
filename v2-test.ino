@@ -12,7 +12,7 @@
 
 byte inPin[] = {A1, 8, 9, 10, 11};
 byte outPin[] = {13, A2, A3, 6, 7};
-int timerResetDate = 10; // default time to stop minutes
+int timerResetDate = 6; // default time to stop minutes
 int timerCount = 0;
 byte menuNow = 1;
 bool writeToLcd = true;
@@ -32,14 +32,18 @@ void setup() {
   for (byte i = 0; i < sizeof(outPin); i++) {
     pinMode(outPin[i], OUTPUT);
   }
-  analogWrite(relayOut1, 0);
-  analogWrite(relayOut2, 0);
-  analogWrite(relayOut3, 0);
-  analogWrite(relayOut4, 0);
+  digitalWrite(relayOut1, LOW);
+  delay(500);
+  digitalWrite(relayOut2, LOW);
+  delay(500);
+  digitalWrite(relayOut3, LOW);
+  delay(500);
+  digitalWrite(relayOut4, LOW);
+  delay(500);
   digitalWrite(indication, HIGH);
   lcd.clear();
   lcd.setCursor(0, 0);
-  scrollMessage(0, "Emergency stop time is " + String(timerResetDate) + " min", 350, 16);
+  // scrollMessage(0, "Emergency stop time is " + String(timerResetDate) + " min", 350, 16);
 }
 // MESURMENT CASE
 bool SensorMesurment() {
@@ -79,10 +83,10 @@ void StartEmergencyTimer() {
     timerCount++;
     delay(990);
   } else {
-    analogWrite(relayOut1, 1024);
-    analogWrite(relayOut2, 1024);
-    analogWrite(relayOut3, 1024);
-    analogWrite(relayOut4, 1024);
+    digitalWrite(relayOut1, HIGH);
+    digitalWrite(relayOut2, HIGH);
+    digitalWrite(relayOut3, HIGH);
+    digitalWrite(relayOut4, HIGH);
     digitalWrite(indication, LOW);
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -100,30 +104,30 @@ void MotorSwitching() {
   if (SensorMesurment() && motorStatus == 1 && !power) {
     PrintTextToLCD("PNP Line ON", "Motor 1,3 ON");
     power = true;
-    motorPower[0] = motorPower[2] = 1024;
+    motorPower[0] = motorPower[2] = HIGH;
   }
   if (!SensorMesurment() && motorStatus == 1 && power) {
     PrintTextToLCD("PNP Line ON", "Motor 1,3 OFF");
     power = false;
     motorStatus = 2;
-    motorPower[0] = motorPower[2] = 0;
+    motorPower[0] = motorPower[2] = LOW;
   }
   if (SensorMesurment() && motorStatus == 2 && !power) {
     PrintTextToLCD("PNP Line ON", "Motor 2,4 ON");
     power = true;
-    motorPower[1] = motorPower[3] = 1024;
+    motorPower[1] = motorPower[3] = HIGH;
   }
   if (!SensorMesurment() && motorStatus == 2 && power) {
     PrintTextToLCD("PNP Line ON", "Motor 2,4 OFF");
     power = false;
     motorStatus = 1;
-    motorPower[1] = motorPower[3] = 0;
+    motorPower[1] = motorPower[3] = LOW;
   }
   // changing pin state
-  analogWrite(relayOut1, motorPower[0]);
-  analogWrite(relayOut2, motorPower[1]);
-  analogWrite(relayOut3, motorPower[2]);
-  analogWrite(relayOut4, motorPower[3]);
+  digitalWrite(relayOut1, motorPower[0]);
+  digitalWrite(relayOut2, motorPower[1]);
+  digitalWrite(relayOut3, motorPower[2]);
+  digitalWrite(relayOut4, motorPower[3]);
 }
 // POWER OFF CASE
 void PowerOffCase() {
@@ -131,18 +135,18 @@ void PowerOffCase() {
     PrintTextToLCD("MOTOR POWER OFF", "Press menu to ON");
     writeToLcd = false;
   }
-  analogWrite(relayOut1, 1024);
-  analogWrite(relayOut2, 1024);
-  analogWrite(relayOut3, 1024);
-  analogWrite(relayOut4, 1024);
+  digitalWrite(relayOut1, HIGH);
+  digitalWrite(relayOut2, HIGH);
+  digitalWrite(relayOut3, HIGH);
+  digitalWrite(relayOut4, HIGH);
   digitalWrite(indication, LOW);
 }
 // EMERGENCY POWER STOP CASE
 void EmergencyPowerOffCase() {
-  analogWrite(relayOut1, 1024);
-  analogWrite(relayOut2, 1024);
-  analogWrite(relayOut3, 1024);
-  analogWrite(relayOut4, 1024);
+  digitalWrite(relayOut1, HIGH);
+  digitalWrite(relayOut2, HIGH);
+  digitalWrite(relayOut3, HIGH);
+  digitalWrite(relayOut4, HIGH);
   digitalWrite(indication, LOW);
   lcd.clear();
   lcd.setCursor(0, 0);
