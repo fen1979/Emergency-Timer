@@ -18,6 +18,7 @@ byte menuNow = 1;
 bool writeToLcd = true;
 // for PNP Line
 byte motorStatus = 1;
+bool motorOnOffState = false;
 int motorPower[4] = {0, 0, 0, 0};
 bool power = false;
 
@@ -32,15 +33,9 @@ void setup() {
   for (byte i = 0; i < sizeof(outPin); i++) {
     pinMode(outPin[i], OUTPUT);
   }
-  digitalWrite(relayOut1, LOW);
-  delay(500);
-  digitalWrite(relayOut2, LOW);
-  delay(500);
-  digitalWrite(relayOut3, LOW);
-  delay(500);
-  digitalWrite(relayOut4, LOW);
-  delay(500);
-  digitalWrite(indication, HIGH);
+  // switch motors to ON state
+  motorOnOffState = MotorOnOff(true);
+
   lcd.clear();
   lcd.setCursor(0, 0);
   // scrollMessage(0, "Emergency stop time is " + String(timerResetDate) + " min", 350, 16);
@@ -51,6 +46,9 @@ bool SensorMesurment() {
 }
 // EMERGENCY CASE
 void EmergencyCase() {
+  // if motor power is OFF turn it to ON
+  if (!motorOnOffState) motorOnOffState = MotorOnOff(true);
+
   if (SensorMesurment()) {
     StartEmergencyTimer();
     writeToLcd = true;
@@ -88,11 +86,9 @@ void StartEmergencyTimer() {
     timerCount++;
     delay(990);
   } else {
-    digitalWrite(relayOut1, HIGH);
-    digitalWrite(relayOut2, HIGH);
-    digitalWrite(relayOut3, HIGH);
-    digitalWrite(relayOut4, HIGH);
-    digitalWrite(indication, LOW);
+    // switch motors to OFF state
+    motorOnOffState = MotorOnOff(false);
+
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("EMERGENCY STOP");
@@ -140,19 +136,34 @@ void PowerOffCase() {
     PrintTextToLCD("MOTOR POWER OFF", "Press menu to ON");
     writeToLcd = false;
   }
-  digitalWrite(relayOut1, HIGH);
-  digitalWrite(relayOut2, HIGH);
-  digitalWrite(relayOut3, HIGH);
-  digitalWrite(relayOut4, HIGH);
-  digitalWrite(indication, LOW);
+  // switch motors to OFF state
+  motorOnOffState = MotorOnOff(false);
+}
+// POWER ON WHEN MOTORS IS SHOOTDOWNED
+bool MotorOnOff(bool motorState) {
+  if (motorState) {
+    // motors switch to ON
+    digitalWrite(relayOut1, HIGH);
+    digitalWrite(relayOut2, HIGH);
+    digitalWrite(relayOut3, HIGH);
+    digitalWrite(relayOut4, HIGH);
+    digitalWrite(indication, LOW);
+  }
+  if (!motorState) {
+    // motors switch to OFF
+    digitalWrite(relayOut1, LOW);
+    digitalWrite(relayOut2, LOW);
+    digitalWrite(relayOut3, LOW);
+    digitalWrite(relayOut4, LOW);
+    digitalWrite(indication, HIGH);
+  }
+  return motorState;
 }
 // EMERGENCY POWER STOP CASE
 void EmergencyPowerOffCase() {
-  digitalWrite(relayOut1, HIGH);
-  digitalWrite(relayOut2, HIGH);
-  digitalWrite(relayOut3, HIGH);
-  digitalWrite(relayOut4, HIGH);
-  digitalWrite(indication, LOW);
+  // switch motors to OFF state
+  motorOnOffState = MotorOnOff(false);
+
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("EMERGENCY STOP");
