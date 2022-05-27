@@ -1,12 +1,19 @@
 # Emergency-Timer
 ## Emergency timer for an device in NTI Lab
 ## Instal Liquid cristall lib files to project first!
-LCD pins (AtMega 328P) A4 - SDA, A5 - SCL  LED pin 13
-Sensor pin A1
-Relay pins A2, A3, A6, A7
-Buttons INC/DEC pins 11, 12
-time to stop by default 10 min
-Maximum time 30 min
-Minimum time 1 min
-LCD address 0x3E (hex)
-
+* LCD pins (AtMega 328P) A4 - SDA, A5 - SCL  
+* LED pin 13
+* Sensor pin A1
+* Relay pins A2, A3, A6, A7
+* Buttons INC/DEC pins 11, 12
+* time to stop by default 10 min
+* Maximum time 30 min
+* Minimum time 1 min
+* LCD address 0x3E (hex)
+## pins setup for minimal code 
+* sensor input A1
+* button stop 8
+* relay outputs (digital) A2, A3, 6, 7
+* LED red (error) 9
+* LED Green (normal work) 10
+* Reset pin for reset button
