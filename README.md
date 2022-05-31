@@ -12,9 +12,9 @@
 * LCD address 0x3E (hex)
 ## Pins setup for minimal code 
 * Sensor input A1
-* Button stop 8
-* Relay outputs (digital) A2, A3, 6, 7
-* LED red (error) 9
-* LED Green (normal work) 10
+* Button Emergency stop 5
+* Relay outputs (digital) 6, 7, 8, 9
+* LED red (error) 10
+* LED Green (normal work) 11
 * Reset pin for reset button
 * Time duration 5 min ( without changes )
