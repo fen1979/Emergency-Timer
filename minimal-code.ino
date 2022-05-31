@@ -1,17 +1,17 @@
 #define sensorIn A1
-#define emergencyStopButton 8
-#define relayOut1 A2
-#define relayOut2 A3
-#define relayOut3 6
-#define relayOut4 7
-#define ledError 9 // red LED
-#define ledWork 10 // green LED
+#define emergencyStopButton 5
+#define relayOut1 6
+#define relayOut2 7
+#define relayOut3 8
+#define relayOut4 9
+#define ledError 10 // red LED
+#define ledWork 11 // green LED
 #define L LOW
 #define H HIGH
 
-byte inPin[] = {A1, 8};
-byte outPin[] = {A2, A3, 6, 7, 9, 10};
-int timerResetDate = 1; // default time to stop minutes = 5
+byte inPin[] = {A1, 5};
+byte outPin[] = {6, 7, 8, 9, 10, 11};
+int timerResetDate = 5; // default time to stop minutes = 5
 int timerCount = 0;
 bool error = false;
 bool started = false;
