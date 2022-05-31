@@ -6,12 +6,15 @@
 #define relayOut4 7
 #define ledError 9 // red LED
 #define ledWork 10 // green LED
+#define L LOW
+#define H HIGH
 
 byte inPin[] = {A1, 8};
 byte outPin[] = {A2, A3, 6, 7, 9, 10};
 int timerResetDate = 1; // default time to stop minutes = 5
 int timerCount = 0;
 bool error = false;
+bool started = false;
 
 // MESURMENT CASE
 bool SensorMesurment() {
@@ -26,58 +29,80 @@ void setup() {
     pinMode(outPin[i], OUTPUT);
   }
 
-  // turn motors switch to ON
-  digitalWrite(relayOut1, LOW);
-  if (SensorMesurment()) delay(2000);
-  
-  digitalWrite(relayOut2, LOW);
-  if (SensorMesurment()) delay(2000);
-  
-  digitalWrite(relayOut3, LOW);
-  if (SensorMesurment()) delay(2000);
-  
-  digitalWrite(relayOut4, LOW);
-
+  // turn motors switch to ON IF LOW PRESSURE IS EXIST
+  if (SensorMesurment()) {
+    digitalWrite(relayOut1, H);
+    delay(2000);
+    digitalWrite(relayOut2, H);
+    delay(2000);
+    digitalWrite(relayOut3, H);
+    delay(2000);
+    digitalWrite(relayOut4, H);
+  }
   // turn green LED ON
-  digitalWrite(ledWork, HIGH);
+  digitalWrite(ledWork, H);
 }
 
+//
+void RelayToOn() {
+  if (SensorMesurment() && !started) {
+    digitalWrite(relayOut1, H);
+    delay(2000);
+    digitalWrite(relayOut2, H);
+    delay(2000);
+    digitalWrite(relayOut3, H);
+    delay(2000);
+    digitalWrite(relayOut4, H);
+    started = true;
+    timerCount = timerCount + 6;
+  }
+}
+//
+void RelayToOff() {
+  digitalWrite(relayOut1, L);
+  digitalWrite(relayOut2, L);
+  digitalWrite(relayOut3, L);
+  digitalWrite(relayOut4, L);
+}
 
-
+// ----------------------------------------------------------------- //
 void loop() {
   // Emergency Stop Button
   if (digitalRead(emergencyStopButton) == LOW ) {
-    // set motors to OFF state
-    digitalWrite(relayOut1, HIGH);
-    digitalWrite(relayOut2, HIGH);
-    digitalWrite(relayOut3, HIGH);
-    digitalWrite(relayOut4, HIGH);
+    // set motors relay to OFF state
+    digitalWrite(relayOut1, L);
+    digitalWrite(relayOut2, L);
+    digitalWrite(relayOut3, L);
+    digitalWrite(relayOut4, L);
     // turn green LED OFF
-    digitalWrite(ledWork, LOW);
+    digitalWrite(ledWork, L);
     error = true;
   }
 
   // emergency case
   if (SensorMesurment() && !error) {
+    RelayToOn();
     if (timerCount < (timerResetDate * 60)) {
       // blink with green LED when timer work
       digitalWrite(ledWork, digitalRead(ledWork) ^ 1);
       timerCount++;
       delay(990);
     } else {
-      // motors switch to OFF
-      digitalWrite(relayOut1, HIGH);
-      digitalWrite(relayOut2, HIGH);
-      digitalWrite(relayOut3, HIGH);
-      digitalWrite(relayOut4, HIGH);
+      // motors relay switch to OFF
+      digitalWrite(relayOut1, L);
+      digitalWrite(relayOut2, L);
+      digitalWrite(relayOut3, L);
+      digitalWrite(relayOut4, L);
       error = true;
     }
   }
 
   // back to normal work case
-  if (!SensorMesurment() && !error) {
-    digitalWrite(ledWork, HIGH);
+  if (!SensorMesurment() && !error && started) {
+    RelayToOff();
+    digitalWrite(ledWork, H);
     timerCount = 0;
+    started = false;
   }
 
 
